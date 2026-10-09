@@ -40,7 +40,13 @@ function spawnDaemon(): void {
   );
   fs.mkdirSync(DAEMON_DIR, { recursive: true });
   const log = fs.openSync(path.join(DAEMON_DIR, "daemon.log"), "a");
-  const child = spawn(electronBinary(), [bootstrapEntry(), daemonEntry()], {
+  // Without a display (ssh) the daemon needs the same headless switches the
+  // pixel launcher adds for a direct launch, or chromium picks x11 and exits.
+  const headless =
+    !env.DISPLAY && !env.WAYLAND_DISPLAY
+      ? ["--ozone-platform=headless", "--screen-info={8192x8192}", "--disable-gpu"]
+      : [];
+  const child = spawn(electronBinary(), [bootstrapEntry(), daemonEntry(), ...headless], {
     detached: true,
     stdio: ["ignore", "ignore", log],
     env,
