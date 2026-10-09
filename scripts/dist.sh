@@ -52,9 +52,15 @@ ROOT="${TODE_INSTALL_ROOT:-$HOME/.local/lib/tode}"
 export ELECTRON_RUN_AS_NODE=1
 # pixel draws the window inside the terminal (kitty graphics protocol), so it
 # needs a terminal on stdout. without one, run the headless server and print its url.
-if [ ! -t 1 ]; then
-  exec "$ROOT/node_modules/@zenbu-labs/pixel/electron/dist/pixel" "$ROOT/dist/main.js" --serve "$@"
-fi
+# commands and options (--shutdown, --version, ...) always run as they are.
+case "$1" in
+  -*) ;;
+  *)
+    if [ ! -t 1 ]; then
+      exec "$ROOT/node_modules/@zenbu-labs/pixel/electron/dist/pixel" "$ROOT/dist/main.js" --serve "$@"
+    fi
+    ;;
+esac
 # in a graphical session, make sure the display reaches the app even when the
 # shell did not inherit it. over ssh there is no such session, so pixel runs
 # headless and draws into the terminal.
