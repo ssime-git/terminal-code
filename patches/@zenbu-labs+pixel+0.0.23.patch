@@ -1,0 +1,25 @@
+diff --git a/node_modules/@zenbu-labs/pixel/dist/web/input.js b/node_modules/@zenbu-labs/pixel/dist/web/input.js
+index 4b9d592..1cebbca 100644
+--- a/node_modules/@zenbu-labs/pixel/dist/web/input.js
++++ b/node_modules/@zenbu-labs/pixel/dist/web/input.js
+@@ -183,7 +183,10 @@ class PageInput {
+             }
+             return;
+         }
+-        const modifiers = this.modifiers(event.mods);
++        // punctuation arrives as the base key plus shift (";" + shift for "."), and
++        // electron turns that into ":" on a us keymap. send the character itself.
++        const punctuated = !!event.text && event.text.length === 1 && !/[A-Za-z0-9]/.test(event.text) && !event.mods.ctrl && !event.mods.super && !event.mods.alt;
++        const modifiers = this.modifiers(punctuated ? { ...event.mods, shift: false } : event.mods);
+         if (event.key.startsWith("left"))
+             modifiers.push("left");
+         if (event.key.startsWith("right"))
+@@ -191,7 +194,7 @@ class PageInput {
+         if (event.kind === "repeat")
+             modifiers.push("isautorepeat");
+         this.sentKeys.add(event.key);
+-        this.send({ type: "rawKeyDown", keyCode, modifiers });
++        this.send({ type: "rawKeyDown", keyCode: punctuated ? event.text : keyCode, modifiers });
+         const printable = !!event.text && !event.mods.ctrl && !event.mods.super && !event.mods.alt;
+         if (printable) {
+             this.send({ type: "char", keyCode: event.text, modifiers });
